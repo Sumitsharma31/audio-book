@@ -56,9 +56,7 @@ const generateAudioForChunk = async (text, filename, voiceModel = 'en-US-Journey
     
     fs.writeFileSync(filePath, response.audioContent, 'binary');
 
-    const PORT = process.env.PORT || 5000;
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
-    return `${BASE_URL}/temp/${filename}`;
+    return `/temp/${filename}`;
   } catch (err) {
     console.error('Error generating audio with Google Cloud API:', err);
     throw new Error(err.message || 'TTS Generation failed');

@@ -19,29 +19,9 @@ const ttsRoutes = require('./routes/tts.routes');
 app.use('/api/upload', uploadRoutes);
 app.use('/api/tts', ttsRoutes);
 
-// Serve Frontend in Production
-// Try to resolve frontend path gracefully whether we're running from /workspace, /backend, etc.
-let frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
-const fs = require('fs');
-
-if (!fs.existsSync(frontendPath)) {
-  // Fallback if __dirname is weird in Cloud Buildpacks
-  frontendPath = path.join(process.cwd(), 'frontend', 'dist');
-  if (!fs.existsSync(frontendPath)) {
-    // Another fallback in case it's flattened
-    frontendPath = path.join(process.cwd(), 'dist');
-  }
-}
-
-console.log(`[Startup] __dirname: ${__dirname}`);
-console.log(`[Startup] process.cwd(): ${process.cwd()}`);
-console.log(`[Startup] Resolved frontendPath: ${frontendPath}`);
-console.log(`[Startup] Does frontendPath exist? ${fs.existsSync(frontendPath)}`);
-
-app.use(express.static(frontendPath));
-
-app.use((req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+// Base route for health check
+app.get('/', (req, res) => {
+  res.send('AudioBook Backend API is running smoothly!');
 });
 
 // Error handling middleware

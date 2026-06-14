@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
 
 const Dashboard = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://audio-book-657586462428.asia-south1.run.app";
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -71,7 +72,7 @@ const Dashboard = () => {
     formData.append("pdf", file);
 
     try {
-      const response = await fetch("/api/upload", {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: "POST",
         body: formData,
       });
@@ -158,7 +159,7 @@ const Dashboard = () => {
     setIsGeneratingAudio(true);
     setErrorMessage("");
     try {
-      const response = await fetch("/api/tts", {
+      const response = await fetch(`${API_BASE_URL}/api/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: page.text, pageNum: page.pageNum, voiceModel: activeVoice })
@@ -169,7 +170,8 @@ const Dashboard = () => {
       if (response.ok) {
         setPages(prevPages => {
           const newPages = [...prevPages];
-          newPages[index] = { ...newPages[index], audioUrl: data.audioUrl };
+          const fullAudioUrl = data.audioUrl.startsWith('http') ? data.audioUrl : `${API_BASE_URL}${data.audioUrl}`;
+          newPages[index] = { ...newPages[index], audioUrl: fullAudioUrl };
           return newPages;
         });
       } else {
