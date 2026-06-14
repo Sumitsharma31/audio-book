@@ -1,0 +1,12 @@
+{
+  "name": "audio-book-root",
+  "version": "1.0.0",
+  "description": "Root package for unified deployment",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build && npm --prefix backend install"
+  }
+}

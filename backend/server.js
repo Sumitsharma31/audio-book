@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
@@ -18,9 +19,12 @@ const ttsRoutes = require('./routes/tts.routes');
 app.use('/api/upload', uploadRoutes);
 app.use('/api/tts', ttsRoutes);
 
-// Base route for testing
-app.get('/', (req, res) => {
-  res.send('AudioBook Backend API is running');
+// Serve Frontend in Production
+const frontendPath = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(frontendPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Error handling middleware

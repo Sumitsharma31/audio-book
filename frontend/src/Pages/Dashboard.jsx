@@ -16,9 +16,6 @@ const Dashboard = () => {
   // Cloud TTS Voice Models
   const [voiceModel, setVoiceModel] = useState("en-US-Neural2-D");
   
-  // Local Speech Synthesis Voice Models
-  const [localVoices, setLocalVoices] = useState([]);
-  const [selectedLocalVoice, setSelectedLocalVoice] = useState("");
   const [speechRate, setSpeechRate] = useState(1);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -34,37 +31,14 @@ const Dashboard = () => {
 
   const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
-  // Load browser's native voice engines
+  // Handle speech synthesis cleanup on unmount
   useEffect(() => {
-    const loadVoices = () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const voices = window.speechSynthesis.getVoices();
-        // Filter for English voices by default, but display all
-        const engVoices = voices.filter(v => v.lang.startsWith('en'));
-        setLocalVoices(engVoices.length > 0 ? engVoices : voices);
-        if (voices.length > 0 && !selectedLocalVoice) {
-          const maleVoice = engVoices.find(v => 
-            v.name.toLowerCase().includes('male') || 
-            v.name.toLowerCase().includes('david') || 
-            v.name.toLowerCase().includes('george') || 
-            v.name.toLowerCase().includes('mark')
-          ) || engVoices.find(v => v.name.includes('Google') || v.name.includes('Natural')) || engVoices[0] || voices[0];
-          setSelectedLocalVoice(maleVoice.name);
-        }
-      }
-    };
-
-    loadVoices();
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
     return () => {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
     };
-  }, [selectedLocalVoice]);
+  }, []);
 
   // Handle file drop
   const onDrop = useCallback((acceptedFiles) => {
@@ -97,7 +71,7 @@ const Dashboard = () => {
     formData.append("pdf", file);
 
     try {
-      const response = await fetch("http://localhost:5000/api/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
@@ -127,7 +101,7 @@ const Dashboard = () => {
   };
 
   // Convert text using browser speechSynthesis (Device mode)
-  const speakLocalText = (text, voiceName = selectedLocalVoice, rate = speechRate) => {
+  const speakLocalText = (text, rate = speechRate) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     
     window.speechSynthesis.cancel();
@@ -138,10 +112,6 @@ const Dashboard = () => {
     // in Chromium/Safari where consecutive cancel() and speak() calls skip the first words.
     setTimeout(() => {
       const utterance = new SpeechSynthesisUtterance(text);
-      const voice = localVoices.find(v => v.name === voiceName);
-      if (voice) {
-        utterance.voice = voice;
-      }
       utterance.rate = rate;
 
       utterance.onstart = () => {
@@ -188,7 +158,7 @@ const Dashboard = () => {
     setIsGeneratingAudio(true);
     setErrorMessage("");
     try {
-      const response = await fetch("http://localhost:5000/api/tts", {
+      const response = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: page.text, pageNum: page.pageNum, voiceModel: activeVoice })
@@ -538,7 +508,7 @@ const Dashboard = () => {
                       const newRate = parseFloat(e.target.value);
                       setSpeechRate(newRate);
                       if (isSpeaking && !isPaused) {
-                        speakLocalText(pages[currentPageIndex].text, selectedLocalVoice, newRate);
+                        speakLocalText(pages[currentPageIndex].text, newRate);
                       }
                     }}
                     className="w-full sm:w-28 accent-indigo-500 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer"
